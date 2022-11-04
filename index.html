@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="PSPad editor, www.pspad.com">
+  <title>Booking.com hotels JSON retriever</title>
+  </head>
+  <body>
+  <big><big><big><big>JSON/CSV retriever for booking.com results</big></big></big></big><br>
+  <br>
+  Find latitude and longitude on <a href="https://maps.google.it">Google Maps</a> and past here:<br>
+  Latitude: <input type="text" id="lat" name="lat" value = 42>N<br>
+  Longitude: <input type="text" id="lon" name="lon" value = 12>E<br>
+  Radius: <input type="text" id="radius" name="radius" value = 10> km<br>
+  <button onclick = "main()">Go</button><br><br>
+  <textarea id="spnOutput3" name="spnOutput3" cols = 150 rows = 30></textarea><br>
+    <span id="spnStatus" name="spnStatus"></span><br>
+  <textarea id="spnLog" name="spnLog" cols = 50 rows = 2></textarea><br>
+<script>
+// v. 0.1.0 - 04/NOV/2022 - First public release
+
+
+PROXY = "http://win98.altervista.org/space/exploration/myp.php?pass=miapass&mode=native&url="; // Use your own proxy!
+PROGRESS_SYMBOLS_COUNT = 5;
+byPost = null;
+byGet = null;
+legacy = null;
+
+
+function retrieve(url, log, output, status) {
+//console.log(url, log, output, status);
+		finalURL = PROXY +  encodeURIComponent(url);
+		var myClient = new XMLHttpRequest();
+		myClient.open('GET',  finalURL);
+
+		myClient.onprogress = function(event) {
+			showDownloadProgress(myClient.response.length, status);
+		};
+
+		myClient.responseType = 'text';
+		myClient.onload = function(response) {
+      		legacy = response;
+			h = JSON.parse(legacy.currentTarget.response);
+			counter = 1;
+			h.b_hotels.forEach((hotel) => {
+				hotelLine = counter + "\t" + hotel.b_hotel_title + "\t" +
+				hotel.b_accommodation_type + "\t" +
+				hotel.b_review_score + "\t" +
+				hotel.b_review_nr + "\t" +
+				hotel.b_marker_type  + "\t" +
+				hotel.b_u_total_price + "\t" +
+				(Math.sqrt(Math.pow(centerlat*1-hotel.b_latitude,2) + Math.pow(centerlon*1-hotel.b_longitude,2))*111).toFixed(0) + "\n";
+                console.log(hotelLine);
+				output.value += hotelLine;
+                counter++;
+			});
+		}
+
+		myClient.onerror = function(event) {
+      if (log) log.value += "*****NETWORK ERROR**\n";
+  		if (status) status.innerHTML = "** NETWORK ERROR";
+		};
+    if (log) log.value += "Sending request...\n";
+		myClient.send(); // Async connection to data server.
+    if (log) log.value += "Request sent.\n";
+}
+
+
+function showDownloadProgress(L, status) {
+	progressStatusIndex++;
+	if (progressStatusIndex >= PROGRESS_SYMBOLS_COUNT) {
+		progressStatusIndex=0;
+	}
+	if (status) status.innerHTML = "Downloading... " + L;
+}
+
+
+function main() {
+	lat = document.getElementById("lat").value*1;
+	lon = document.getElementById("lon").value*1;
+	radiusKm = document.getElementById("radius").value*1; 
+	radiusDegrees = radiusKm / 111;
+    lat1 = lat - radiusDegrees;
+	lat2 = lat + radiusDegrees;
+	lon1 = lon - radiusDegrees;
+	lon2 = lon + radiusDegrees;
+	url = "https://www.booking.com/markers_on_map?aid=304142&aid=304142&dest_id=-130358&dest_type=&sr_id=&ref=searchresults&limit=100&stype=1&lang=it&ssm=1&checkin=2022-12-29&checkout=2023-01-01&sech=1&ngp=1&room1=A%2CA%2CA&ugr=1&maps_opened=1&nsopf=1&nsobf=1&esf=1&nflt=mealplan%3D1%3Breview_score%3D80%3Bfc%3D2&sr_countrycode=it&sr_lat=&sr_long=&sgh=1&dba=1&dbc=1&spr=1&currency=EUR&&shws=1%20&huks=1&somp=1&mdimb=1%20&tp=1%20&img_size=270x200%20&avl=1%20&nor=1%20&spc=1%20&rmd=1%20&slpnd=1%20&sbr=1&at=1%20&sat=1%20&ssu=1&srocc=1&order=price;BBOX=#BBOX#&_=1667554522637";
+	bbox = lon1 + "," + lat1 + "," + lon2 + "," + lat2; // "13.673105411340503,41.75777869190572,14.244394473840503,42.36949079906152"; // bottom left, top right
+	url = url.replace("#BBOX#",bbox);
+	coords=bbox.split(",");
+	lat1=coords[1]*1;
+	lon1=coords[0]*1;
+	lat2=coords[3]*1;
+	lon2=coords[2]*1;
+	centerlat = lat1 + (lat2-lat1)/2;
+	centerlon = lon1 + (lon2-lon1)/2;
+
+	progressStatusIndex=0;
+    document.getElementById("spnOutput3").value = "n.\ttype\tscore\treviews\tavail\tprice\tdistance\n";
+	retrieve(url, document.getElementById("spnLog"), document.getElementById("spnOutput3"), document.getElementById("spnStatus"));
+}
+
+</script>
+
+  </body>
+</html>
