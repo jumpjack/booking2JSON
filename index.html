@@ -14,9 +14,10 @@
   Radius: <input type="text" id="radius" name="radius" value = 10> km<br>
   <button onclick = "main()">Go</button><br><br>
   <textarea id="spnOutput3" name="spnOutput3" cols = 150 rows = 30></textarea><br>
-    <span id="spnStatus" name="spnStatus"></span><br>
+	<span id="spnStatus" name="spnStatus"></span><br>
   <textarea id="spnLog" name="spnLog" cols = 50 rows = 2></textarea><br>
 <script>
+
 // v. 0.1.0 - 04/NOV/2022 - First public release
 
 
@@ -39,7 +40,7 @@ function retrieve(url, log, output, status) {
 
 		myClient.responseType = 'text';
 		myClient.onload = function(response) {
-      		legacy = response;
+	  		legacy = response;
 			h = JSON.parse(legacy.currentTarget.response);
 			counter = 1;
 			h.b_hotels.forEach((hotel) => {
@@ -50,19 +51,19 @@ function retrieve(url, log, output, status) {
 				hotel.b_marker_type  + "\t" +
 				hotel.b_u_total_price + "\t" +
 				(Math.sqrt(Math.pow(centerlat*1-hotel.b_latitude,2) + Math.pow(centerlon*1-hotel.b_longitude,2))*111).toFixed(0) + "\n";
-                console.log(hotelLine);
+				console.log(hotelLine);
 				output.value += hotelLine;
-                counter++;
+				counter++;
 			});
 		}
 
 		myClient.onerror = function(event) {
-      if (log) log.value += "*****NETWORK ERROR**\n";
+	  if (log) log.value += "*****NETWORK ERROR**\n";
   		if (status) status.innerHTML = "** NETWORK ERROR";
 		};
-    if (log) log.value += "Sending request...\n";
+	if (log) log.value += "Sending request...\n";
 		myClient.send(); // Async connection to data server.
-    if (log) log.value += "Request sent.\n";
+	if (log) log.value += "Request sent.\n";
 }
 
 
@@ -80,7 +81,7 @@ function main() {
 	lon = document.getElementById("lon").value*1;
 	radiusKm = document.getElementById("radius").value*1; 
 	radiusDegrees = radiusKm / 111;
-    lat1 = lat - radiusDegrees;
+	lat1 = lat - radiusDegrees;
 	lat2 = lat + radiusDegrees;
 	lon1 = lon - radiusDegrees;
 	lon2 = lon + radiusDegrees;
@@ -96,7 +97,7 @@ function main() {
 	centerlon = lon1 + (lon2-lon1)/2;
 
 	progressStatusIndex=0;
-    document.getElementById("spnOutput3").value = "n.\ttype\tscore\treviews\tavail\tprice\tdistance\n";
+	document.getElementById("spnOutput3").value = "n.\ttype\tscore\treviews\tavail\tprice\tdistance\n";
 	retrieve(url, document.getElementById("spnLog"), document.getElementById("spnOutput3"), document.getElementById("spnStatus"));
 }
 
